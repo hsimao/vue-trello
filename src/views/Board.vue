@@ -12,7 +12,8 @@
         <div class="list-reset">
           <div class="task"
             v-for="task in column.tasks"
-            :key="task.id">
+            :key="task.id"
+            @click="goToTask(task.id)">
             <span class="w-full flex-no-shrink font-bold">
               {{ task.name }}
             </span>
@@ -24,6 +25,12 @@
         </div>
       </div>
     </div>
+
+    <div v-if="isTaskOpen"
+      class="task-bg"
+      @click.self="close">
+      <router-view />
+    </div>
   </div>
 </template>
 
@@ -33,7 +40,18 @@ import { mapState } from 'vuex'
 export default {
   name: 'BoardPage',
   computed: {
-    ...mapState(['board'])
+    ...mapState(['board']),
+    isTaskOpen() {
+      return this.$route.name === 'task'
+    }
+  },
+  methods: {
+    goToTask(id) {
+      this.$router.push({ name: 'task', params: { id } })
+    },
+    close() {
+      this.$router.push({ name: 'board' })
+    }
   }
 }
 </script>
