@@ -6,6 +6,6 @@ export const uuid = () => {
 
 export const saveStatePlugin = store => {
   store.subscribe((mutation, state) =>
-    localStorage.setItem('boards', JSON.stringify(state.boards))
+    localStorage.setItem('board', JSON.stringify(state.board))
   )
 }
