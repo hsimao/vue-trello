@@ -19,7 +19,10 @@
             v-for="(task, taskIndex) in column.tasks"
             :key="task.id"
             draggable
+            @dragover.prevent
+            @dragenter.prevent
             @dragstart="pickupTask($event, taskIndex, columnIndex)"
+            @drop.stop="moveTaskOrColumn($event, column.tasks, columnIndex, taskIndex)"
             @click="goToTask(task.id)">
             <span class="w-full flex-no-shrink font-bold">
               {{ task.name }}
@@ -74,7 +77,7 @@ export default {
     pickupTask(e, taskIndex, fromColumnIndex) {
       e.dataTransfer.effectAllowed = 'move'
       e.dataTransfer.dropEffect = 'move'
-      e.dataTransfer.setData('task-index', taskIndex)
+      e.dataTransfer.setData('from-task-index', taskIndex)
       e.dataTransfer.setData('from-column-index', fromColumnIndex)
       e.dataTransfer.setData('type', 'task')
     },
@@ -84,20 +87,28 @@ export default {
       e.dataTransfer.setData('from-column-index', fromColumnIndex)
       e.dataTransfer.setData('type', 'column')
     },
-    moveTaskOrColumn(e, toTasks, toColumnIndex) {
+    moveTaskOrColumn(e, toTasks, toColumnIndex, toTaskIndex) {
       const type = e.dataTransfer.getData('type')
-      if (type === 'task') return this.moveTask(e, toTasks)
-      this.moveColumn(e, toColumnIndex)
+      if (type === 'task') {
+        // 判斷如果 toTaskIndex 沒有接收到參數，表示是拖曳 task 到 column layout 上, 沒有放到 task 內, 將預設擺放到最後面
+        const currentToTaskIndex =
+          toTaskIndex !== undefined ? toTaskIndex : toTasks.length
+
+        this.moveTask(e, toTasks, currentToTaskIndex)
+      } else {
+        this.moveColumn(e, toColumnIndex)
+      }
     },
-    moveTask(e, toTasks) {
+    moveTask(e, toTasks, toTaskIndex) {
       const fromColumnIndex = e.dataTransfer.getData('from-column-index')
-      const taskIndex = e.dataTransfer.getData('task-index')
+      const fromTaskIndex = e.dataTransfer.getData('from-task-index')
       const fromTasks = this.board.columns[fromColumnIndex].tasks
 
       this.$store.commit('MOVE_TASK', {
         fromTasks,
+        fromTaskIndex,
         toTasks,
-        taskIndex
+        toTaskIndex
       })
     },
     moveColumn(e, toColumnIndex) {
